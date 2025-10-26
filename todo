@@ -1,0 +1,86 @@
+- simple terminal UI
+
+- DNS
+- TCP
+- TLS
+- HTTP 1/2/3
+- certificate expiry
+
+- latency
+
+
+
+
+own recursive resolver https://github.com/jvns/tiny-resolver
+or something similar to paepcke.de/dnsresolver
+and what about DNSSEC?
+and TTL
+
+https://wiki.archlinux.org/title/AUR_submission_guidelines
+
+IP
+
+DNS
+DNSSEC
+propagation
+SVCB/HTTPSSVC
+HTTPS record
+CNAME depth
+DANE/TLSA
+TTL (and if changed, still test until cache expired)
+ECH config
+Port mapping
+ip hints
+CAA
+
+Ping test
+
+TCP / UDP
+TFO
+MTU?
+
+TLS, 1.0 1.1 1.2 1.3
+Certificate chain
+CT logs
+OCSP stapling
+CRL
+Cipher suites
+Session tickets
+Session id resumption
+Post quantum
+Renegotiation
+Key exchange timing
+
+HTTP (1/2/3)
+ALPN
+0-RTT
+SNI
+ECH
+HTTP3 connection migration
+certificate (+expiration warnings)
+latency
+Spin bit (HTTP3)? (latency measurement)
+
+http status code
+CSP
+HSTS, HSTS *PRELOAD*
+compression
+Alt-Svc header
+Cache control, expires, etag
+
+breakdown of DNS/TCP/TLS/TTFB/HTTP
+
+keep-alive test separate
+
+timeouts
+429 detect
+retry-after
+
+follow redirects
+
+DNS prefetch, preconnect hint, early hint
+websocket upgrade
+
+ip changes
+sudden protocol changes
+TLS config changes
