@@ -22,3 +22,7 @@ sudo chmod +x /usr/bin/durl
 ```shell
 go install argv.nl/durl@latest
 ```
+
+### demo
+
+<https://youtu.be/j1snzCcKP9k>
