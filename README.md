@@ -25,4 +25,4 @@ go install argv.nl/durl@latest
 
 ### demo
 
-<https://youtu.be/j1snzCcKP9k>
+<https://youtu.be/ggSgHjTKVKQ>

@@ -12,6 +12,9 @@ properly discover http3 port
 switch from bubbletea to own TUI implementation?
 async, parallel, update the UI live
 cleanup code
+accidentally following redirects?
+purposely following redirects (and seperately analyzing them)
+show ips in list even if no tests ran yet?
 hmm..? 2025/10/26 22:46:19 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
 SSLv3?
 center ui, with max height and width
