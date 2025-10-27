@@ -6,15 +6,28 @@
 - HTTP 1/2/3
 - certificate expiry
 
-- latency
 
 
-
-
+properly discover http3 port
+switch from bubbletea to own TUI implementation?
+async, parallel, update the UI live
+cleanup code
+hmm..? 2025/10/26 22:46:19 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
+SSLv3?
+center ui, with max height and width
+some servers to actually test the working of this, similar to badssl, but then badhttp ig
+add http 1.0
+if not the same across all tls versions, show a table of http version support per tls version
+also test http, not just https
+more detailed tls handshake failure handling,
+https://badssl.com/
+considering https://pkg.go.dev/github.com/zmap/zcrypto, https://github.com/refraction-networking/utls (?)
+things similar to ssllabs.com
 own recursive resolver https://github.com/jvns/tiny-resolver
 or something similar to paepcke.de/dnsresolver
-and what about DNSSEC?
+and what about DNSSEC? (https://nsmith.net/go-dns-resolver)
 and TTL
+ALPN for http/3?
 
 https://wiki.archlinux.org/title/AUR_submission_guidelines
 
@@ -52,6 +65,7 @@ Renegotiation
 Key exchange timing
 
 HTTP (1/2/3)
+QUIC
 ALPN
 0-RTT
 SNI
@@ -84,3 +98,7 @@ websocket upgrade
 ip changes
 sudden protocol changes
 TLS config changes
+
+
+
+preferred dns servers, config file

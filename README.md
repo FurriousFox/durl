@@ -4,7 +4,7 @@ A command-line tool for diagnosing connection issues and analyzing a myriad of H
 
 ## installing
 
-### Arch (AUR)
+<!-- ### Arch (AUR)
 
 ```shell
 paru -Syu durl
@@ -17,7 +17,7 @@ sudo wget https://github.com/FurriousFox/durl/releases/latest/download/durl_linu
 sudo chmod +x /usr/bin/durl
 ```
 
-### building from source
+### building from source -->
 
 ```shell
 go install argv.nl/durl@latest
