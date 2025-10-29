@@ -1,4 +1,4 @@
-package app
+package ui
 
 import (
 	"fmt"
@@ -11,6 +11,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
+
+// var spinner = []rune("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
+var spinner = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+var spincount = 0
 
 type Model struct {
 	Mu     sync.RWMutex
@@ -167,6 +171,8 @@ var baseStyle = lipgloss.NewStyle().
 	BorderForeground(lipgloss.Color("240"))
 
 func (m *Model) View() string {
+	spin := spinner[spincount%10]
+
 	var focusedModelStyle = lipgloss.NewStyle().
 		Width(m.width-m.IpLen-6).
 		Height(m.height-4).
@@ -179,6 +185,7 @@ func (m *Model) View() string {
 	// currently selected
 	goodStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")) // green
 	badStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000"))  // red
+	spinStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#AAAAAA")) // grey
 
 	if len(m.Table.SelectedRow()) == 0 {
 		return lipgloss.JoinHorizontal(lipgloss.Top, baseStyle.Render(m.Table.View()), focusedModelStyle.Render(""))
@@ -188,48 +195,64 @@ func (m *Model) View() string {
 	m.Mu.RLock()
 	if m.State[m.Table.SelectedRow()[0]]["tcp"] == true {
 		stateString += goodStyle.Render("● TCP")
-	} else {
+	} else if m.State[m.Table.SelectedRow()[0]]["tcp"] != nil {
 		stateString += badStyle.Render("● TCP")
+	} else {
+		stateString += spinStyle.Render(spin + " TCP")
 	}
 
 	if m.State[m.Table.SelectedRow()[0]]["tls_10"] == true {
 		stateString += goodStyle.Render("\n\n● TLS 1.0")
-	} else {
+	} else if m.State[m.Table.SelectedRow()[0]]["tls_10"] != nil {
 		stateString += badStyle.Render("\n\n● TLS 1.0")
+	} else {
+		stateString += spinStyle.Render("\n\n" + spin + " TLS 1.0")
 	}
 	if m.State[m.Table.SelectedRow()[0]]["tls_11"] == true {
 		stateString += goodStyle.Render("\n● TLS 1.1")
-	} else {
+	} else if m.State[m.Table.SelectedRow()[0]]["tls_11"] != nil {
 		stateString += badStyle.Render("\n● TLS 1.1")
+	} else {
+		stateString += spinStyle.Render("\n" + spin + " TLS 1.1")
 	}
 	if m.State[m.Table.SelectedRow()[0]]["tls_12"] == true {
 		stateString += goodStyle.Render("\n● TLS 1.2")
-	} else {
+	} else if m.State[m.Table.SelectedRow()[0]]["tls_12"] != nil {
 		stateString += badStyle.Render("\n● TLS 1.2")
+	} else {
+		stateString += spinStyle.Render("\n" + spin + " TLS 1.2")
 	}
 	if m.State[m.Table.SelectedRow()[0]]["tls_13"] == true {
 		stateString += goodStyle.Render("\n● TLS 1.3")
-	} else {
+	} else if m.State[m.Table.SelectedRow()[0]]["tls_13"] != nil {
 		stateString += badStyle.Render("\n● TLS 1.3")
+	} else {
+		stateString += spinStyle.Render("\n" + spin + " TLS 1.3")
 	}
 
 	value, ok := m.State[m.Table.SelectedRow()[0]]["http_11"].([]any)
 	if ok && value[0] == true {
 		stateString += goodStyle.Render(fmt.Sprintf("\n\n● HTTP/1.1 (%s)", value[1]))
-	} else {
+	} else if ok {
 		stateString += badStyle.Render("\n\n● HTTP/1.1")
+	} else {
+		stateString += spinStyle.Render("\n\n" + spin + " HTTP/1.1")
 	}
 	value, ok = m.State[m.Table.SelectedRow()[0]]["http_20"].([]any)
 	if ok && value[0] == true {
 		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/2   (%s)", value[1]))
-	} else {
+	} else if ok {
 		stateString += badStyle.Render("\n● HTTP/2")
+	} else {
+		stateString += spinStyle.Render("\n" + spin + " HTTP/2")
 	}
 	value, ok = m.State[m.Table.SelectedRow()[0]]["http_30"].([]any)
 	if ok && value[0] == true {
 		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/3   (%s)", value[1]))
-	} else {
+	} else if ok {
 		stateString += badStyle.Render("\n● HTTP/3")
+	} else {
+		stateString += spinStyle.Render("\n" + spin + " HTTP/3")
 	}
 	m.Mu.RUnlock()
 
@@ -239,6 +262,7 @@ func (m *Model) View() string {
 
 func tick() tea.Cmd {
 	return tea.Tick(time.Second/10, func(t time.Time) tea.Msg {
+		spincount++
 		return time.Time(t)
 	})
 }

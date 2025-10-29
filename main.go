@@ -14,7 +14,7 @@ import (
 	quic "github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 
-	"argv.nl/durl/internal/app"
+	ui "argv.nl/durl/internal/app"
 )
 
 func main() {
@@ -72,7 +72,7 @@ func main() {
 	}
 
 	state := map[string]map[string]any{}
-	model := &app.Model{State: state}
+	model := &ui.Model{State: state}
 
 	// p := tea.NewProgram(model, tea.WithAltScreen())
 	// if _, err := p.Run(); err != nil {
@@ -103,6 +103,10 @@ func main() {
 
 				model.Mu.Lock()
 				state[ip.String()]["tcp"] = false
+				state[ip.String()]["tls_10"] = []any{false, dial_err.Error()}
+				state[ip.String()]["tls_11"] = []any{false, dial_err.Error()}
+				state[ip.String()]["tls_12"] = []any{false, dial_err.Error()}
+				state[ip.String()]["tls_13"] = []any{false, dial_err.Error()}
 				model.Mu.Unlock()
 				// skip tls/http, as tcp failed
 				continue
@@ -369,5 +373,5 @@ func main() {
 		// fmt.Println(string(jsonBytes))
 	}()
 
-	app.RunUI(model)
+	ui.RunUI(model)
 }
