@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	table "argv.nl/durl/table-fix"
+	table "argv.nl/durl/internal/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )

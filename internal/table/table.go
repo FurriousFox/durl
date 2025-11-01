@@ -8,9 +8,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mattn/go-runewidth"
 
-	"argv.nl/durl/table-fix/help"
-	"argv.nl/durl/table-fix/key"
-	"argv.nl/durl/table-fix/viewport"
+	"argv.nl/durl/internal/table/help"
+	"argv.nl/durl/internal/table/key"
+	"argv.nl/durl/internal/table/viewport"
 )
 
 // Model defines a state for the table widget.

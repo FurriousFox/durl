@@ -2,7 +2,7 @@
 // Tea.
 package viewport
 
-import "argv.nl/durl/table-fix/key"
+import "argv.nl/durl/internal/table/key"
 
 const spacebar = " "
 

@@ -4,7 +4,7 @@ package help
 import (
 	"strings"
 
-	"argv.nl/durl/table-fix/key"
+	"argv.nl/durl/internal/table/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )

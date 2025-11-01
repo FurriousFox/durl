@@ -6,8 +6,13 @@
 - HTTP 1/2/3
 - certificate expiry
 
+
+make not supporting TLS 1.0 or TLS 1.1 less red?? (as they kinda old and superseeded)
+why does durl HTTP/3 result in 302 FOUND on translate.google.com (while curl HTTP/3 results in 200 OK)? (only difference I've seen between HTTP/2 and HTTP/3 yet is useragent and that shouldn't matter)
+not only parallelize per ip, but also the tests individually
+merge tcp check and http 1.1
 check whether all mutex locks are done correctly
-show status per ip
+require at least 1 http version to pass, for the ip to pass
 custom useragent
 in "DialContext" has it tried to resolve the domain itself, or only after that? (e.g. try to prevent useless dns resolves that might cause issues)
 if screen is too small --> scrollbar?
