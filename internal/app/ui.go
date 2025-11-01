@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/charmbracelet/bubbles/table"
+	table "argv.nl/durl/table-fix"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -62,6 +62,7 @@ func (m *Model) Init() tea.Cmd {
 		table.WithRows(rows),
 		table.WithFocused(true),
 		table.WithHeight(m.height-3),
+		table.WithTruncate(false),
 	)
 
 	s := table.DefaultStyles()
@@ -86,6 +87,10 @@ func (m *Model) Init() tea.Cmd {
 	return tick()
 }
 
+var goodStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")) // green
+var badStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000"))  // red
+var spinStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#AAAAAA")) // grey
+
 func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	maxWidth := len("IP")
 
@@ -98,7 +103,7 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	m.Mu.RUnlock()
 
 	columns := []table.Column{
-		{Title: "IP", Width: maxWidth},
+		{Title: "IP", Width: maxWidth + 2},
 	}
 
 	m.Mu.RLock()
@@ -110,12 +115,20 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	rows := []table.Row{}
 	for _, ip := range ips {
-		rows = append(rows, table.Row{ip})
+		value, ok := m.State[ip]["test"].([]any)
+		if ok && value[0] == true {
+			rows = append(rows, table.Row{goodStyle.Render(fmt.Sprintf("● %s", ip))})
+		} else if ok && value[0] == false {
+			rows = append(rows, table.Row{badStyle.Render(fmt.Sprintf("● %s", ip))})
+		} else {
+			rows = append(rows, table.Row{spinStyle.Render(fmt.Sprintf("%s %s", spinner[spincount%10], ip))})
+		}
+		// rows = append(rows, table.Row{ip})
 	}
 	m.Mu.RUnlock()
 
 	m.Mu.Lock()
-	m.IpLen = maxWidth
+	m.IpLen = maxWidth + 2
 
 	m.Table.SetColumns(columns)
 	m.Table.SetRows(rows)
@@ -125,7 +138,7 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.width = msg.Width
 
-		m.Table.SetHeight(msg.Height - 2)
+		m.Table.SetHeight(max(msg.Height-2, 3))
 
 		// case time.Time:
 		// 	m--
@@ -182,55 +195,67 @@ func (m *Model) View() string {
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240"))
 
-	// currently selected
-	goodStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")) // green
-	badStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000"))  // red
-	spinStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#AAAAAA")) // grey
-
 	if len(m.Table.SelectedRow()) == 0 {
 		return lipgloss.JoinHorizontal(lipgloss.Top, baseStyle.Render(m.Table.View()), focusedModelStyle.Render(""))
 	}
 
 	var stateString string = ""
+
 	m.Mu.RLock()
-	if m.State[m.Table.SelectedRow()[0]]["tcp"] == true {
+	ips := make([]string, 0, len(m.State))
+	for ip := range m.State {
+		ips = append(ips, ip)
+	}
+	sort.Strings(ips)
+
+	selectedIndex := -1
+	selectedRow := m.Table.SelectedRow()
+	for i, row := range m.Table.Rows() {
+		if row[0] == selectedRow[0] {
+			selectedIndex = i
+			break
+		}
+	}
+	selectedIP := ips[selectedIndex]
+
+	if m.State[selectedIP]["tcp"] == true {
 		stateString += goodStyle.Render("● TCP")
-	} else if m.State[m.Table.SelectedRow()[0]]["tcp"] != nil {
+	} else if m.State[selectedIP]["tcp"] != nil {
 		stateString += badStyle.Render("● TCP")
 	} else {
 		stateString += spinStyle.Render(spin + " TCP")
 	}
 
-	if m.State[m.Table.SelectedRow()[0]]["tls_10"] == true {
+	if m.State[selectedIP]["tls_10"] == true {
 		stateString += goodStyle.Render("\n\n● TLS 1.0")
-	} else if m.State[m.Table.SelectedRow()[0]]["tls_10"] != nil {
+	} else if m.State[selectedIP]["tls_10"] != nil {
 		stateString += badStyle.Render("\n\n● TLS 1.0")
 	} else {
 		stateString += spinStyle.Render("\n\n" + spin + " TLS 1.0")
 	}
-	if m.State[m.Table.SelectedRow()[0]]["tls_11"] == true {
+	if m.State[selectedIP]["tls_11"] == true {
 		stateString += goodStyle.Render("\n● TLS 1.1")
-	} else if m.State[m.Table.SelectedRow()[0]]["tls_11"] != nil {
+	} else if m.State[selectedIP]["tls_11"] != nil {
 		stateString += badStyle.Render("\n● TLS 1.1")
 	} else {
 		stateString += spinStyle.Render("\n" + spin + " TLS 1.1")
 	}
-	if m.State[m.Table.SelectedRow()[0]]["tls_12"] == true {
+	if m.State[selectedIP]["tls_12"] == true {
 		stateString += goodStyle.Render("\n● TLS 1.2")
-	} else if m.State[m.Table.SelectedRow()[0]]["tls_12"] != nil {
+	} else if m.State[selectedIP]["tls_12"] != nil {
 		stateString += badStyle.Render("\n● TLS 1.2")
 	} else {
 		stateString += spinStyle.Render("\n" + spin + " TLS 1.2")
 	}
-	if m.State[m.Table.SelectedRow()[0]]["tls_13"] == true {
+	if m.State[selectedIP]["tls_13"] == true {
 		stateString += goodStyle.Render("\n● TLS 1.3")
-	} else if m.State[m.Table.SelectedRow()[0]]["tls_13"] != nil {
+	} else if m.State[selectedIP]["tls_13"] != nil {
 		stateString += badStyle.Render("\n● TLS 1.3")
 	} else {
 		stateString += spinStyle.Render("\n" + spin + " TLS 1.3")
 	}
 
-	value, ok := m.State[m.Table.SelectedRow()[0]]["http_11"].([]any)
+	value, ok := m.State[selectedIP]["http_11"].([]any)
 	if ok && value[0] == true {
 		stateString += goodStyle.Render(fmt.Sprintf("\n\n● HTTP/1.1 (%s)", value[1]))
 	} else if ok {
@@ -238,7 +263,7 @@ func (m *Model) View() string {
 	} else {
 		stateString += spinStyle.Render("\n\n" + spin + " HTTP/1.1")
 	}
-	value, ok = m.State[m.Table.SelectedRow()[0]]["http_20"].([]any)
+	value, ok = m.State[selectedIP]["http_20"].([]any)
 	if ok && value[0] == true {
 		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/2   (%s)", value[1]))
 	} else if ok {
@@ -246,7 +271,7 @@ func (m *Model) View() string {
 	} else {
 		stateString += spinStyle.Render("\n" + spin + " HTTP/2")
 	}
-	value, ok = m.State[m.Table.SelectedRow()[0]]["http_30"].([]any)
+	value, ok = m.State[selectedIP]["http_30"].([]any)
 	if ok && value[0] == true {
 		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/3   (%s)", value[1]))
 	} else if ok {

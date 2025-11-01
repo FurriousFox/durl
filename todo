@@ -6,12 +6,14 @@
 - HTTP 1/2/3
 - certificate expiry
 
-
+check whether all mutex locks are done correctly
+show status per ip
+custom useragent
+in "DialContext" has it tried to resolve the domain itself, or only after that? (e.g. try to prevent useless dns resolves that might cause issues)
 if screen is too small --> scrollbar?
 update screen on state update (instead of every 10th second)
 add icmp ping
 add udp quic test
-domain doesn't exist warning / url doesn't resolve warning
 better ipv4/ipv6 sort algo
 durl keep re-testing continuously (reloading, +latency)
 recursively fetch certificate hostnames
@@ -20,16 +22,15 @@ add --debug
 http response, show text extract / title
 redirect --> blue, optionally follow it / re-run on redirected url
 only spin if actually doing something with it, when not started the test yet, just show gray dot
-if skipping other tests because of failing tcp, don't show failed but grey
+if skipping other tests because of failing tcp, don't show failed but grey(?)
 if failing tcp, still check other http/3 (quic (udp))
-indicate failing dns
+indicate failing dns using TUI
 reduce code duplication
 verbose env var / -v
 properly discover http3 port
 switch from bubbletea to own TUI implementation?
 async, parallel, update the UI live
 cleanup code
-accidentally following redirects?
 purposely following redirects (and seperately analyzing them)
 show ips in list even if no tests ran yet?
 ui indicate running
