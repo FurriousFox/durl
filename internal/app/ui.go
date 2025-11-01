@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"sort"
 	"sync"
 	"time"
@@ -116,12 +117,13 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	rows := []table.Row{}
 	for _, ip := range ips {
 		value, ok := m.State[ip]["test"].([]any)
+		re := regexp.MustCompile(`(\x1b\[[0-9;]*m)+$`)
 		if ok && value[0] == true {
-			rows = append(rows, table.Row{goodStyle.Render(fmt.Sprintf("● %s", ip))})
+			rows = append(rows, table.Row{re.ReplaceAllString(goodStyle.Render(fmt.Sprintf("● %s", ip)), "")})
 		} else if ok && value[0] == false {
-			rows = append(rows, table.Row{badStyle.Render(fmt.Sprintf("● %s", ip))})
+			rows = append(rows, table.Row{re.ReplaceAllString(badStyle.Render(fmt.Sprintf("● %s", ip)), "")})
 		} else {
-			rows = append(rows, table.Row{spinStyle.Render(fmt.Sprintf("%s %s", spinner[spincount%10], ip))})
+			rows = append(rows, table.Row{re.ReplaceAllString(spinStyle.Render(fmt.Sprintf("%s %s", spinner[spincount%10], ip)), "")})
 		}
 		// rows = append(rows, table.Row{ip})
 	}
