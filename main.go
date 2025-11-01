@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"time"
 
 	quic "github.com/quic-go/quic-go"
@@ -21,37 +23,42 @@ func main() {
 	log.SetOutput(io.Discard)
 
 	if len(os.Args[1:]) != 1 {
-		// fmt.Fprintln(os.Stderr, "use 'durl <url>'")
+		fmt.Fprintln(os.Stderr, "use 'durl <url>'")
 		return
 	}
 
 	// parse url
-	var url, err = url.Parse(os.Args[1])
+
+	var url *url.URL
+	var err error
+	matched, err := regexp.MatchString(`^[a-zA-Z][a-zA-Z0-9+\-.]*://`, os.Args[1])
 	if err != nil {
-		var url2, err2 = url.Parse("https://" + os.Args[1])
+		fmt.Fprintln(os.Stderr, "internal exception:", err)
+		return
+	}
+	if matched {
+		// if strings.Contains(os.Args[1], ":") {
+		url, err = url.Parse(os.Args[1])
+	} else {
+		url, err = url.Parse("https://" + os.Args[1])
+	}
+	if err != nil {
+		var url2, err2 = url.Parse(os.Args[1])
 		if err2 == nil {
 			url = url2
 		} else {
-			// fmt.Fprintln(os.Stderr, "idk err", err)
+			fmt.Fprintln(os.Stderr, "invalid url:", err)
 			return
 		}
 	}
 
-	if url.Scheme == "" {
-		var url2, err2 = url.Parse("https://" + os.Args[1])
-		if err2 == nil {
-			url = url2
-		} else {
-			// fmt.Fprintln(os.Stderr, "idk err", err)
-			return
-		}
-	} else if url.Scheme != "https" {
-		// fmt.Fprintf(os.Stderr, "unsupported protocol '%s'\n", url.Scheme)
+	if url.Scheme != "https" {
+		fmt.Fprintf(os.Stderr, "unsupported protocol '%s'\n", url.Scheme)
 		return
 	}
 
 	if url.Hostname() == "" {
-		// fmt.Fprintln(os.Stderr, "hostname required")
+		fmt.Fprintln(os.Stderr, "hostname required")
 		return
 	}
 
@@ -67,17 +74,12 @@ func main() {
 
 	var ips, dns_err = net.LookupIP(hostname)
 	if dns_err != nil {
-		// fmt.Fprintln(os.Stderr, "dns lookup err", dns_err)
+		fmt.Fprintln(os.Stderr, "dns lookup error:", dns_err)
 		return
 	}
 
 	state := map[string]map[string]any{}
 	model := &ui.Model{State: state}
-
-	// p := tea.NewProgram(model, tea.WithAltScreen())
-	// if _, err := p.Run(); err != nil {
-	// fmt.Fprintln(os.Stderr, err)
-	// }
 
 	go func() {
 		for _, ip := range ips {
@@ -103,10 +105,16 @@ func main() {
 
 				model.Mu.Lock()
 				state[ip.String()]["tcp"] = false
+
 				state[ip.String()]["tls_10"] = []any{false, dial_err.Error()}
 				state[ip.String()]["tls_11"] = []any{false, dial_err.Error()}
 				state[ip.String()]["tls_12"] = []any{false, dial_err.Error()}
 				state[ip.String()]["tls_13"] = []any{false, dial_err.Error()}
+
+				state[ip.String()]["http_11"] = []any{false, dial_err.Error()}
+				state[ip.String()]["http_20"] = []any{false, dial_err.Error()}
+				state[ip.String()]["http_30"] = []any{false, dial_err.Error()}
+
 				model.Mu.Unlock()
 				// skip tls/http, as tcp failed
 				continue

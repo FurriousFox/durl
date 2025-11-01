@@ -7,6 +7,24 @@
 - certificate expiry
 
 
+if screen is too small
+update screen on state update (instead of every 10th second)
+add icmp ping
+add udp quic test
+domain doesn't exist warning / url doesn't resolve warning
+better ipv4/ipv6 sort algo
+fix durl domain.tld:443
+durl keep re-testing continuously (reloading, +latency)
+recursively fetch certificate hostnames
+Cloudflare domains (are more likely to fail http/3, unjustified)
+add --debug
+http response, show text extract / title
+redirect --> blue, optionally follow it / re-run on redirected url
+only spin if actually doing something with it, when not started the test yet, just show gray dot
+if skipping other tests because of failing tcp, don't show failed but grey
+if failing tcp, still check other http/3 (quic (udp))
+indicate failing dns
+reduce code duplication
 verbose env var / -v
 properly discover http3 port
 switch from bubbletea to own TUI implementation?
@@ -33,6 +51,7 @@ or something similar to paepcke.de/dnsresolver
 and what about DNSSEC? (https://nsmith.net/go-dns-resolver)
 and TTL
 ALPN for http/3?
+purposefuly skip and keep track of dns cache
 
 https://wiki.archlinux.org/title/AUR_submission_guidelines
 
