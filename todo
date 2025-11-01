@@ -7,13 +7,12 @@
 - certificate expiry
 
 
-if screen is too small
+if screen is too small --> scrollbar?
 update screen on state update (instead of every 10th second)
 add icmp ping
 add udp quic test
 domain doesn't exist warning / url doesn't resolve warning
 better ipv4/ipv6 sort algo
-fix durl domain.tld:443
 durl keep re-testing continuously (reloading, +latency)
 recursively fetch certificate hostnames
 Cloudflare domains (are more likely to fail http/3, unjustified)

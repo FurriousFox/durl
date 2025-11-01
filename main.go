@@ -249,7 +249,11 @@ func main() {
 						TLSClientConfig: &tls.Config{
 							ServerName: url.Hostname(),
 						},
-					}}
+					},
+					CheckRedirect: func(req *http.Request, via []*http.Request) error { // don't follow redirects
+						return http.ErrUseLastResponse
+					},
+				}
 				var req, err = http.NewRequest("GET", url.String(), nil)
 				if err != nil {
 					panic(err)
@@ -292,7 +296,11 @@ func main() {
 							ServerName: url.Hostname(),
 						},
 						Protocols: protocols,
-					}}
+					},
+					CheckRedirect: func(req *http.Request, via []*http.Request) error { // don't follow redirects
+						return http.ErrUseLastResponse
+					},
+				}
 				var req, err = http.NewRequest("GET", url.String(), nil)
 				if err != nil {
 					panic(err)
@@ -341,6 +349,9 @@ func main() {
 					client := &http.Client{
 						Timeout:   5 * time.Second,
 						Transport: tr,
+						CheckRedirect: func(req *http.Request, via []*http.Request) error { // don't follow redirects
+							return http.ErrUseLastResponse
+						},
 					}
 
 					var req, err = http.NewRequest("GET", url.String(), nil)

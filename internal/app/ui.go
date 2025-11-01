@@ -256,7 +256,7 @@ func (m *Model) View() string {
 	}
 	m.Mu.RUnlock()
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, baseStyle.Render(m.Table.View()), focusedModelStyle.Render(stateString))
+	return lipgloss.JoinHorizontal(lipgloss.Bottom, baseStyle.Render(m.Table.View()), focusedModelStyle.Render(stateString))
 	// return baseStyle.Render(m.table.View())
 }
 
