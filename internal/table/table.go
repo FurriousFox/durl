@@ -2,6 +2,7 @@
 package table
 
 import (
+	"regexp"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -436,6 +437,7 @@ func (m Model) headersView() string {
 
 func (m *Model) renderRow(r int) string {
 	s := make([]string, 0, len(m.cols))
+	re := regexp.MustCompile(`(\x1b\[[0-9;]*m)+$`) // remove trailing ansi escapes from value
 	for i, value := range m.rows[r] {
 		if m.cols[i].Width <= 0 {
 			continue
@@ -443,9 +445,9 @@ func (m *Model) renderRow(r int) string {
 		style := lipgloss.NewStyle().Width(m.cols[i].Width).MaxWidth(m.cols[i].Width).Inline(true)
 		var renderedCell string
 		if m.Truncate {
-			renderedCell = m.styles.Cell.Render(style.Render(runewidth.Truncate(value, m.cols[i].Width, "…")))
+			renderedCell = m.styles.Cell.Render(style.Render(runewidth.Truncate(re.ReplaceAllString(value, ""), m.cols[i].Width, "…")))
 		} else {
-			renderedCell = m.styles.Cell.Render(style.Render(value))
+			renderedCell = m.styles.Cell.Render(style.Render(re.ReplaceAllString(value, "")))
 		}
 		s = append(s, renderedCell)
 	}
