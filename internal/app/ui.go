@@ -23,13 +23,14 @@ var spincount = 0
 type stateUpdateMsg struct{}
 
 type Model struct {
-	Mu      sync.RWMutex
-	width   int
-	height  int
-	Focus   int
-	Table   table.Model
-	IpLen   int
-	State   map[string]map[string]test.Status
+	Mu    sync.RWMutex
+	State map[string]map[string]test.Status
+
+	table  table.Model
+	ipLen  int
+	width  int
+	height int
+
 	program *tea.Program
 }
 
@@ -101,9 +102,8 @@ func (m *Model) Init() tea.Cmd {
 	t.SetStyles(s)
 
 	m.Mu.Lock()
-	m.Focus = 0
-	m.Table = t
-	m.IpLen = maxWidth
+	m.table = t
+	m.ipLen = maxWidth
 	m.Mu.Unlock()
 
 	// return nil
@@ -154,17 +154,17 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	m.Mu.RUnlock()
 
 	m.Mu.Lock()
-	m.IpLen = maxWidth + 2
+	m.ipLen = maxWidth + 2
 
-	m.Table.SetColumns(columns)
-	m.Table.SetRows(rows)
+	m.table.SetColumns(columns)
+	m.table.SetRows(rows)
 
 	switch msg := message.(type) {
 	case tea.WindowSizeMsg:
 		m.height = msg.Height
 		m.width = msg.Width
 
-		m.Table.SetHeight(max(msg.Height-2, 3))
+		m.table.SetHeight(max(msg.Height-2, 3))
 
 		// case time.Time:
 		// 	m--
@@ -200,7 +200,7 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	m.Mu.Lock()
-	m.Table, cmd = m.Table.Update(message)
+	m.table, cmd = m.table.Update(message)
 	m.Mu.Unlock()
 
 	return m, cmd
@@ -212,7 +212,7 @@ var baseStyle = lipgloss.NewStyle().
 
 func (m *Model) View() string {
 	var focusedModelStyle = lipgloss.NewStyle().
-		Width(m.width-m.IpLen-6).
+		Width(m.width-m.ipLen-6).
 		Height(m.height-4).
 		Align(lipgloss.Top, lipgloss.Top). /* horizontal, vertical */
 		PaddingLeft(1).
@@ -220,8 +220,8 @@ func (m *Model) View() string {
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240"))
 
-	if len(m.Table.SelectedRow()) == 0 {
-		return lipgloss.JoinHorizontal(lipgloss.Top, baseStyle.Render(m.Table.View()), focusedModelStyle.Render(""))
+	if len(m.table.SelectedRow()) == 0 {
+		return lipgloss.JoinHorizontal(lipgloss.Top, baseStyle.Render(m.table.View()), focusedModelStyle.Render(""))
 	}
 
 	var stateString string = ""
@@ -244,8 +244,8 @@ func (m *Model) View() string {
 	// sort.Strings(ips)
 
 	selectedIndex := -1
-	selectedRow := m.Table.SelectedRow()
-	for i, row := range m.Table.Rows() {
+	selectedRow := m.table.SelectedRow()
+	for i, row := range m.table.Rows() {
 		if row[0] == selectedRow[0] {
 			selectedIndex = i
 			break
@@ -268,7 +268,7 @@ func (m *Model) View() string {
 
 	m.Mu.RUnlock()
 
-	return lipgloss.JoinHorizontal(lipgloss.Bottom, baseStyle.Render(m.Table.View()), focusedModelStyle.Render(stateString))
+	return lipgloss.JoinHorizontal(lipgloss.Bottom, baseStyle.Render(m.table.View()), focusedModelStyle.Render(stateString))
 	// return baseStyle.Render(m.table.View())
 }
 
@@ -325,4 +325,16 @@ func renderItems(items []item) string {
 	}
 
 	return strings.Join(rendered, "")
+}
+
+func (model *Model) Result(test *test.Check) func() {
+	return (func() {
+		result := test.Test()
+
+		model.Mu.Lock()
+		model.State[test.IP.String()][test.Name] = *result
+		model.Mu.Unlock()
+
+		model.TriggerUpdate()
+	})
 }

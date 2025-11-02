@@ -59,69 +59,69 @@ func Test(url *url.URL, ip net.IP, port string, model *ui.Model) {
 	var wg sync.WaitGroup
 
 	// try tls 1.0
-	wg.Go(func() {
-		result := *Tls(url, address, tls.VersionTLS10)
-		model.Mu.Lock()
-		state[ip.String()]["tls_10"] = result
-		model.Mu.Unlock()
-		model.TriggerUpdate()
-	})
+	wg.Go(model.Result(&Check{
+		IP:   ip,
+		Name: "tls_10",
+		Test: func() *Status {
+			return Tls(url, address, tls.VersionTLS10)
+		},
+	}))
 
 	// tls 1.1
-	wg.Go(func() {
-		result := *Tls(url, address, tls.VersionTLS11)
-		model.Mu.Lock()
-		state[ip.String()]["tls_11"] = result
-		model.Mu.Unlock()
-		model.TriggerUpdate()
-	})
+	wg.Go(model.Result(&Check{
+		IP:   ip,
+		Name: "tls_11",
+		Test: func() *Status {
+			return Tls(url, address, tls.VersionTLS11)
+		},
+	}))
 
 	// tls 1.2
-	wg.Go(func() {
-		result := *Tls(url, address, tls.VersionTLS12)
-		model.Mu.Lock()
-		state[ip.String()]["tls_12"] = result
-		model.Mu.Unlock()
-		model.TriggerUpdate()
-	})
+	wg.Go(model.Result(&Check{
+		IP:   ip,
+		Name: "tls_12",
+		Test: func() *Status {
+			return Tls(url, address, tls.VersionTLS12)
+		},
+	}))
 
 	// tls 1.3
-	wg.Go(func() {
-		result := *Tls(url, address, tls.VersionTLS13)
-		model.Mu.Lock()
-		state[ip.String()]["tls_13"] = result
-		model.Mu.Unlock()
-		model.TriggerUpdate()
-	})
+	wg.Go(model.Result(&Check{
+		IP:   ip,
+		Name: "tls_13",
+		Test: func() *Status {
+			return Tls(url, address, tls.VersionTLS13)
+		},
+	}))
 
 	// try http 1.0
 
 	// try http 1.1
-	wg.Go(func() {
-		result := *Http_11(url, address)
-		model.Mu.Lock()
-		state[ip.String()]["http_11"] = result
-		model.Mu.Unlock()
-		model.TriggerUpdate()
-	})
+	wg.Go(model.Result(&Check{
+		IP:   ip,
+		Name: "http_11",
+		Test: func() *Status {
+			return Http_11(url, address)
+		},
+	}))
 
 	// try http 2
-	wg.Go(func() {
-		result := *Http_2(url, address)
-		model.Mu.Lock()
-		state[ip.String()]["http_2"] = result
-		model.Mu.Unlock()
-		model.TriggerUpdate()
-	})
+	wg.Go(model.Result(&Check{
+		IP:   ip,
+		Name: "http_2",
+		Test: func() *Status {
+			return Http_2(url, address)
+		},
+	}))
 
 	// try http 3
-	wg.Go(func() {
-		result := *Http_3(url, address)
-		model.Mu.Lock()
-		state[ip.String()]["http_3"] = result
-		model.Mu.Unlock()
-		model.TriggerUpdate()
-	})
+	wg.Go(model.Result(&Check{
+		IP:   ip,
+		Name: "http_3",
+		Test: func() *Status {
+			return Http_3(url, address)
+		},
+	}))
 
 	// certificate info
 

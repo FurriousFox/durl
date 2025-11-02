@@ -1,5 +1,7 @@
 package test
 
+import "net"
+
 const (
 	// Active  = -2
 	// Running = -2
@@ -12,4 +14,10 @@ const (
 type Status struct {
 	State int
 	Msg   string
+}
+
+type Check struct {
+	IP   net.IP
+	Name string
+	Test func() *Status
 }
