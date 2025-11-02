@@ -67,6 +67,7 @@ func (m *Model) Init() tea.Cmd {
 		if ip1ipv6 := ip1.To4() == nil; ip1ipv6 != (ip2.To4() == nil) { // one ipv4, one ipv6
 			return ip1ipv6
 		} else { // both ipv6, or both ipv4
+			// return ips[i] < ips[j]
 			return bytes.Compare(ip1, ip2) < 0
 		}
 	})
@@ -139,6 +140,7 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if ip1ipv6 := ip1.To4() == nil; ip1ipv6 != (ip2.To4() == nil) { // one ipv4, one ipv6
 			return ip1ipv6
 		} else { // both ipv6, or both ipv4
+			// return ips[i] < ips[j]
 			return bytes.Compare(ip1, ip2) < 0
 		}
 	})
@@ -245,6 +247,7 @@ func (m *Model) View() string {
 		if ip1ipv6 := ip1.To4() == nil; ip1ipv6 != (ip2.To4() == nil) { // one ipv4, one ipv6
 			return ip1ipv6
 		} else { // both ipv6, or both ipv4
+			// return ips[i] < ips[j]
 			return bytes.Compare(ip1, ip2) < 0
 		}
 	})

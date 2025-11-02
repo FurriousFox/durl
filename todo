@@ -27,6 +27,7 @@ if skipping other tests because of failing tcp, don't show failed but grey(?)
 if failing tcp, still check other http/3 (quic (udp))
 indicate failing dns using TUI
 reduce code duplication
+select from ip list using mouse click
 verbose env var / -v
 properly discover http3 port
 switch from bubbletea to own TUI implementation?
