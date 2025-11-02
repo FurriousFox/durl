@@ -1,7 +1,9 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
+	"net"
 	"os"
 	"sort"
 	"sync"
@@ -16,14 +18,23 @@ import (
 var spinner = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 var spincount = 0
 
+type stateUpdateMsg struct{}
+
 type Model struct {
-	Mu     sync.RWMutex
-	width  int
-	height int
-	Focus  int
-	Table  table.Model
-	IpLen  int
-	State  map[string]map[string]any
+	Mu      sync.RWMutex
+	width   int
+	height  int
+	Focus   int
+	Table   table.Model
+	IpLen   int
+	State   map[string]map[string]any
+	program *tea.Program
+}
+
+func (m *Model) TriggerUpdate() {
+	if m.program != nil {
+		m.program.Send(stateUpdateMsg{})
+	}
 }
 
 func (m *Model) Init() tea.Cmd {
@@ -49,7 +60,17 @@ func (m *Model) Init() tea.Cmd {
 	for ip := range m.State {
 		ips = append(ips, ip)
 	}
-	sort.Strings(ips)
+	sort.Slice(ips, func(i, j int) bool {
+		ip1 := net.ParseIP(ips[i])
+		ip2 := net.ParseIP(ips[j])
+
+		if ip1ipv6 := ip1.To4() == nil; ip1ipv6 != (ip2.To4() == nil) { // one ipv4, one ipv6
+			return ip1ipv6
+		} else { // both ipv6, or both ipv4
+			return bytes.Compare(ip1, ip2) < 0
+		}
+	})
+	// sort.Strings(ips)
 
 	rows := []table.Row{}
 	for _, ip := range ips {
@@ -111,7 +132,17 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	for ip := range m.State {
 		ips = append(ips, ip)
 	}
-	sort.Strings(ips)
+	sort.Slice(ips, func(i, j int) bool {
+		ip1 := net.ParseIP(ips[i])
+		ip2 := net.ParseIP(ips[j])
+
+		if ip1ipv6 := ip1.To4() == nil; ip1ipv6 != (ip2.To4() == nil) { // one ipv4, one ipv6
+			return ip1ipv6
+		} else { // both ipv6, or both ipv4
+			return bytes.Compare(ip1, ip2) < 0
+		}
+	})
+	// sort.Strings(ips)
 
 	rows := []table.Row{}
 	for _, ip := range ips {
@@ -169,7 +200,8 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case time.Time:
 		// Just trigger a re-render
 		return m, tick()
-
+	case stateUpdateMsg:
+		return m, nil
 	}
 
 	m.Mu.Lock()
@@ -206,7 +238,17 @@ func (m *Model) View() string {
 	for ip := range m.State {
 		ips = append(ips, ip)
 	}
-	sort.Strings(ips)
+	sort.Slice(ips, func(i, j int) bool {
+		ip1 := net.ParseIP(ips[i])
+		ip2 := net.ParseIP(ips[j])
+
+		if ip1ipv6 := ip1.To4() == nil; ip1ipv6 != (ip2.To4() == nil) { // one ipv4, one ipv6
+			return ip1ipv6
+		} else { // both ipv6, or both ipv4
+			return bytes.Compare(ip1, ip2) < 0
+		}
+	})
+	// sort.Strings(ips)
 
 	selectedIndex := -1
 	selectedRow := m.Table.SelectedRow()
@@ -294,6 +336,7 @@ func tick() tea.Cmd {
 
 func RunUI(model *Model) {
 	p := tea.NewProgram(model, tea.WithAltScreen())
+	model.program = p
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}

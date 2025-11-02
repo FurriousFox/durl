@@ -81,6 +81,8 @@ func Test(url *url.URL, ip net.IP, port string, model *ui.Model) {
 			model.Mu.Unlock()
 			conn.Close()
 		}
+
+		model.TriggerUpdate()
 	})
 
 	// tls 1.1
@@ -104,6 +106,8 @@ func Test(url *url.URL, ip net.IP, port string, model *ui.Model) {
 			model.Mu.Unlock()
 			conn.Close()
 		}
+
+		model.TriggerUpdate()
 	})
 
 	// tls 1.2
@@ -127,6 +131,8 @@ func Test(url *url.URL, ip net.IP, port string, model *ui.Model) {
 			model.Mu.Unlock()
 			conn.Close()
 		}
+
+		model.TriggerUpdate()
 	})
 
 	// tls 1.3
@@ -150,6 +156,8 @@ func Test(url *url.URL, ip net.IP, port string, model *ui.Model) {
 			model.Mu.Unlock()
 			conn.Close()
 		}
+
+		model.TriggerUpdate()
 	})
 
 	// try http 1.0
@@ -160,6 +168,7 @@ func Test(url *url.URL, ip net.IP, port string, model *ui.Model) {
 		model.Mu.Lock()
 		state[ip.String()]["http_11"] = []any{status.State, status.Msg}
 		model.Mu.Unlock()
+		model.TriggerUpdate()
 	})
 
 	// try http 2
@@ -168,6 +177,7 @@ func Test(url *url.URL, ip net.IP, port string, model *ui.Model) {
 		model.Mu.Lock()
 		state[ip.String()]["http_20"] = []any{status.State, status.Msg}
 		model.Mu.Unlock()
+		model.TriggerUpdate()
 	})
 
 	// try http 3
@@ -176,6 +186,7 @@ func Test(url *url.URL, ip net.IP, port string, model *ui.Model) {
 		model.Mu.Lock()
 		state[ip.String()]["http_30"] = []any{status.State, status.Msg}
 		model.Mu.Unlock()
+		model.TriggerUpdate()
 	})
 
 	// certificate info
@@ -183,20 +194,17 @@ func Test(url *url.URL, ip net.IP, port string, model *ui.Model) {
 	wg.Wait()
 	model.Mu.Lock()
 
-	state[ip.String()]["test"] = []any{Failed}
-	if value, ok := model.State[ip.String()]["http_11"].([]any); ok {
-		if value[0] == true {
-			state[ip.String()]["test"] = []any{Success}
-		}
-	} else if value, ok := model.State[ip.String()]["http_20"].([]any); ok {
-		if value[0] == true {
-			state[ip.String()]["test"] = []any{Success}
-		}
-	} else if value, ok := model.State[ip.String()]["http_30"].([]any); ok {
-		if value[0] == true {
-			state[ip.String()]["test"] = []any{Success}
-		}
+	if value, ok := model.State[ip.String()]["http_11"].([]any); ok && value[0] == true {
+		state[ip.String()]["test"] = []any{Success}
+	} else if value, ok := model.State[ip.String()]["http_20"].([]any); ok && value[0] == true {
+		state[ip.String()]["test"] = []any{Success}
+	} else if value, ok := model.State[ip.String()]["http_30"].([]any); ok && value[0] == true {
+		state[ip.String()]["test"] = []any{Success}
+	} else {
+		state[ip.String()]["test"] = []any{Failed}
 	}
 
 	model.Mu.Unlock()
+
+	model.TriggerUpdate()
 }
