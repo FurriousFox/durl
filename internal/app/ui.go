@@ -10,6 +10,7 @@ import (
 	"time"
 
 	table "argv.nl/durl/internal/table"
+	"argv.nl/durl/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -27,7 +28,7 @@ type Model struct {
 	Focus   int
 	Table   table.Model
 	IpLen   int
-	State   map[string]map[string]any
+	State   map[string]map[string]test.Status
 	program *tea.Program
 }
 
@@ -67,7 +68,6 @@ func (m *Model) Init() tea.Cmd {
 		if ip1ipv6 := ip1.To4() == nil; ip1ipv6 != (ip2.To4() == nil) { // one ipv4, one ipv6
 			return ip1ipv6
 		} else { // both ipv6, or both ipv4
-			// return ips[i] < ips[j]
 			return bytes.Compare(ip1, ip2) < 0
 		}
 	})
@@ -140,7 +140,6 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if ip1ipv6 := ip1.To4() == nil; ip1ipv6 != (ip2.To4() == nil) { // one ipv4, one ipv6
 			return ip1ipv6
 		} else { // both ipv6, or both ipv4
-			// return ips[i] < ips[j]
 			return bytes.Compare(ip1, ip2) < 0
 		}
 	})
@@ -148,12 +147,11 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	rows := []table.Row{}
 	for _, ip := range ips {
-		value, ok := m.State[ip]["test"].([]any)
-		if ok && value[0] == true {
+		if m.State[ip]["test"].State == test.Success {
 			rows = append(rows, table.Row{goodStyle.Render(fmt.Sprintf("● %s", ip))})
-		} else if ok && value[0] == false {
+		} else if m.State[ip]["test"].State == test.Failed {
 			rows = append(rows, table.Row{badStyle.Render(fmt.Sprintf("● %s", ip))})
-		} else {
+		} else if m.State[ip]["test"].State == test.Pending {
 			rows = append(rows, table.Row{spinStyle.Render(fmt.Sprintf("%s %s", spinner[spincount%10], ip))})
 		}
 		// rows = append(rows, table.Row{ip})
@@ -247,7 +245,6 @@ func (m *Model) View() string {
 		if ip1ipv6 := ip1.To4() == nil; ip1ipv6 != (ip2.To4() == nil) { // one ipv4, one ipv6
 			return ip1ipv6
 		} else { // both ipv6, or both ipv4
-			// return ips[i] < ips[j]
 			return bytes.Compare(ip1, ip2) < 0
 		}
 	})
@@ -263,65 +260,72 @@ func (m *Model) View() string {
 	}
 	selectedIP := ips[selectedIndex]
 
-	if m.State[selectedIP]["tcp"] == true {
+	switch m.State[selectedIP]["tcp"].State {
+	case test.Success:
 		stateString += goodStyle.Render("● TCP")
-	} else if m.State[selectedIP]["tcp"] != nil {
+	case test.Failed:
 		stateString += badStyle.Render("● TCP")
-	} else {
+	case test.Pending:
 		stateString += spinStyle.Render(spin + " TCP")
 	}
 
-	if m.State[selectedIP]["tls_10"] == true {
+	switch m.State[selectedIP]["tls_10"].State {
+	case test.Success:
 		stateString += goodStyle.Render("\n\n● TLS 1.0")
-	} else if m.State[selectedIP]["tls_10"] != nil {
+	case test.Failed:
 		stateString += badStyle.Render("\n\n● TLS 1.0")
-	} else {
+	case test.Pending:
 		stateString += spinStyle.Render("\n\n" + spin + " TLS 1.0")
 	}
-	if m.State[selectedIP]["tls_11"] == true {
+	switch m.State[selectedIP]["tls_11"].State {
+	case test.Success:
 		stateString += goodStyle.Render("\n● TLS 1.1")
-	} else if m.State[selectedIP]["tls_11"] != nil {
+	case test.Failed:
 		stateString += badStyle.Render("\n● TLS 1.1")
-	} else {
+	case test.Pending:
 		stateString += spinStyle.Render("\n" + spin + " TLS 1.1")
 	}
-	if m.State[selectedIP]["tls_12"] == true {
+	switch m.State[selectedIP]["tls_12"].State {
+	case test.Success:
 		stateString += goodStyle.Render("\n● TLS 1.2")
-	} else if m.State[selectedIP]["tls_12"] != nil {
+	case test.Failed:
 		stateString += badStyle.Render("\n● TLS 1.2")
-	} else {
+	case test.Pending:
 		stateString += spinStyle.Render("\n" + spin + " TLS 1.2")
 	}
-	if m.State[selectedIP]["tls_13"] == true {
+	switch m.State[selectedIP]["tls_13"].State {
+	case test.Success:
 		stateString += goodStyle.Render("\n● TLS 1.3")
-	} else if m.State[selectedIP]["tls_13"] != nil {
+	case test.Failed:
 		stateString += badStyle.Render("\n● TLS 1.3")
-	} else {
+	case test.Pending:
 		stateString += spinStyle.Render("\n" + spin + " TLS 1.3")
 	}
 
-	value, ok := m.State[selectedIP]["http_11"].([]any)
-	if ok && value[0] == true {
-		stateString += goodStyle.Render(fmt.Sprintf("\n\n● HTTP/1.1 (%s)", value[1]))
-	} else if ok {
+	switch m.State[selectedIP]["http_11"].State {
+	case test.Success:
+		stateString += goodStyle.Render(fmt.Sprintf("\n\n● HTTP/1.1 (%s)", m.State[selectedIP]["http_11"].Msg))
+	case test.Failed:
 		stateString += badStyle.Render("\n\n● HTTP/1.1")
-	} else {
+	case test.Pending:
 		stateString += spinStyle.Render("\n\n" + spin + " HTTP/1.1")
 	}
-	value, ok = m.State[selectedIP]["http_20"].([]any)
-	if ok && value[0] == true {
-		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/2   (%s)", value[1]))
-	} else if ok {
+
+	switch m.State[selectedIP]["http_20"].State {
+	case test.Success:
+		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/2   (%s)", m.State[selectedIP]["http_20"].Msg))
+	case test.Failed:
 		stateString += badStyle.Render("\n● HTTP/2")
-	} else {
+	case test.Pending:
 		stateString += spinStyle.Render("\n" + spin + " HTTP/2")
 	}
-	value, ok = m.State[selectedIP]["http_30"].([]any)
-	if ok && value[0] == true {
-		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/3   (%s)", value[1]))
-	} else if ok {
+
+	switch m.State[selectedIP]["http_30"].State {
+	case test.Success:
+		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/3   (%s)", m.State[selectedIP]["http_30"].Msg))
+	case test.Failed:
 		stateString += badStyle.Render("\n● HTTP/3")
-	} else {
+	case test.Pending:
 		stateString += spinStyle.Render("\n" + spin + " HTTP/3")
 	}
 	m.Mu.RUnlock()

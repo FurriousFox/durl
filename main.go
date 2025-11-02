@@ -11,6 +11,7 @@ import (
 
 	ui "argv.nl/durl/internal/app"
 	"argv.nl/durl/internal/test"
+	"argv.nl/durl/internal/tester"
 )
 
 func main() {
@@ -72,18 +73,18 @@ func main() {
 		return
 	}
 
-	state := map[string]map[string]any{}
+	state := map[string]map[string]test.Status{}
 	model := &ui.Model{State: state}
 
 	go func() {
 		model.Mu.Lock()
 		for _, ip := range ips {
-			state[ip.String()] = map[string]any{}
+			state[ip.String()] = map[string]test.Status{}
 		}
 		model.Mu.Unlock()
 
 		for _, ip := range ips {
-			go test.Test(url, ip, port, model)
+			go tester.Test(url, ip, port, model)
 		}
 
 		// model.Mu.RLock()
