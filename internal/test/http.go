@@ -36,7 +36,11 @@ func _http(url *url.URL, address string, http2 bool) *Status {
 	}
 	var req, err = http.NewRequest("GET", url.String(), nil)
 	if err != nil {
-		panic(err)
+		// panic(err)
+		return &Status{
+			State: Failed,
+			Msg:   err.Error(),
+		}
 	}
 	req.Close = true
 
@@ -101,7 +105,11 @@ func Http_3(url *url.URL, address string) *Status {
 
 		var req, err = http.NewRequest("GET", url.String(), nil)
 		if err != nil {
-			panic(err)
+			// panic(err)
+			return &Status{
+				State: Failed,
+				Msg:   err.Error(),
+			}
 		}
 		req.Close = true
 

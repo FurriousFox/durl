@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -147,14 +148,8 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	rows := []table.Row{}
 	for _, ip := range ips {
-		if m.State[ip]["test"].State == test.Success {
-			rows = append(rows, table.Row{goodStyle.Render(fmt.Sprintf("● %s", ip))})
-		} else if m.State[ip]["test"].State == test.Failed {
-			rows = append(rows, table.Row{badStyle.Render(fmt.Sprintf("● %s", ip))})
-		} else if m.State[ip]["test"].State == test.Pending {
-			rows = append(rows, table.Row{spinStyle.Render(fmt.Sprintf("%s %s", spinner[spincount%10], ip))})
-		}
-		// rows = append(rows, table.Row{ip})
+
+		rows = append(rows, table.Row{renderItem(m.State[ip]["test"], ip, "")})
 	}
 	m.Mu.RUnlock()
 
@@ -216,8 +211,6 @@ var baseStyle = lipgloss.NewStyle().
 	BorderForeground(lipgloss.Color("240"))
 
 func (m *Model) View() string {
-	spin := spinner[spincount%10]
-
 	var focusedModelStyle = lipgloss.NewStyle().
 		Width(m.width-m.IpLen-6).
 		Height(m.height-4).
@@ -260,74 +253,19 @@ func (m *Model) View() string {
 	}
 	selectedIP := ips[selectedIndex]
 
-	switch m.State[selectedIP]["tcp"].State {
-	case test.Success:
-		stateString += goodStyle.Render("● TCP")
-	case test.Failed:
-		stateString += badStyle.Render("● TCP")
-	case test.Pending:
-		stateString += spinStyle.Render(spin + " TCP")
-	}
+	stateString += renderItems([]item{
+		{m.State[selectedIP]["tcp"], "TCP", ""},
 
-	switch m.State[selectedIP]["tls_10"].State {
-	case test.Success:
-		stateString += goodStyle.Render("\n\n● TLS 1.0")
-	case test.Failed:
-		stateString += badStyle.Render("\n\n● TLS 1.0")
-	case test.Pending:
-		stateString += spinStyle.Render("\n\n" + spin + " TLS 1.0")
-	}
-	switch m.State[selectedIP]["tls_11"].State {
-	case test.Success:
-		stateString += goodStyle.Render("\n● TLS 1.1")
-	case test.Failed:
-		stateString += badStyle.Render("\n● TLS 1.1")
-	case test.Pending:
-		stateString += spinStyle.Render("\n" + spin + " TLS 1.1")
-	}
-	switch m.State[selectedIP]["tls_12"].State {
-	case test.Success:
-		stateString += goodStyle.Render("\n● TLS 1.2")
-	case test.Failed:
-		stateString += badStyle.Render("\n● TLS 1.2")
-	case test.Pending:
-		stateString += spinStyle.Render("\n" + spin + " TLS 1.2")
-	}
-	switch m.State[selectedIP]["tls_13"].State {
-	case test.Success:
-		stateString += goodStyle.Render("\n● TLS 1.3")
-	case test.Failed:
-		stateString += badStyle.Render("\n● TLS 1.3")
-	case test.Pending:
-		stateString += spinStyle.Render("\n" + spin + " TLS 1.3")
-	}
+		{m.State[selectedIP]["tls_10"], "TLS 1.0", "\n\n"},
+		{m.State[selectedIP]["tls_11"], "TLS 1.1", "\n"},
+		{m.State[selectedIP]["tls_12"], "TLS 1.2", "\n"},
+		{m.State[selectedIP]["tls_13"], "TLS 1.3", "\n"},
 
-	switch m.State[selectedIP]["http_11"].State {
-	case test.Success:
-		stateString += goodStyle.Render(fmt.Sprintf("\n\n● HTTP/1.1 (%s)", m.State[selectedIP]["http_11"].Msg))
-	case test.Failed:
-		stateString += badStyle.Render("\n\n● HTTP/1.1")
-	case test.Pending:
-		stateString += spinStyle.Render("\n\n" + spin + " HTTP/1.1")
-	}
+		{m.State[selectedIP]["http_11"], "HTTP/1.1", "\n\n"},
+		{m.State[selectedIP]["http_2"], "HTTP/2  ", "\n"},
+		{m.State[selectedIP]["http_3"], "HTTP/3  ", "\n"},
+	})
 
-	switch m.State[selectedIP]["http_20"].State {
-	case test.Success:
-		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/2   (%s)", m.State[selectedIP]["http_20"].Msg))
-	case test.Failed:
-		stateString += badStyle.Render("\n● HTTP/2")
-	case test.Pending:
-		stateString += spinStyle.Render("\n" + spin + " HTTP/2")
-	}
-
-	switch m.State[selectedIP]["http_30"].State {
-	case test.Success:
-		stateString += goodStyle.Render(fmt.Sprintf("\n● HTTP/3   (%s)", m.State[selectedIP]["http_30"].Msg))
-	case test.Failed:
-		stateString += badStyle.Render("\n● HTTP/3")
-	case test.Pending:
-		stateString += spinStyle.Render("\n" + spin + " HTTP/3")
-	}
 	m.Mu.RUnlock()
 
 	return lipgloss.JoinHorizontal(lipgloss.Bottom, baseStyle.Render(m.Table.View()), focusedModelStyle.Render(stateString))
@@ -347,4 +285,44 @@ func RunUI(model *Model) {
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
+}
+
+func renderItem(status test.Status, name string, prefix string) string {
+	spin := spinner[spincount%10]
+
+	switch status.State {
+	case test.Success:
+		if status.Msg != "" {
+			return goodStyle.Render(fmt.Sprintf("%s● %s (%s)", prefix, name, status.Msg))
+		}
+		return goodStyle.Render(fmt.Sprintf("%s● %s", prefix, name))
+	case test.Failed:
+		if status.Msg != "" {
+			return badStyle.Render(fmt.Sprintf("%s● %s (%s)", prefix, name, status.Msg))
+		}
+		return badStyle.Render(fmt.Sprintf("%s● %s", prefix, name))
+	case test.Pending:
+		if status.Msg != "" {
+			return spinStyle.Render(fmt.Sprintf("%s%s %s (%s)", prefix, spin, name, status.Msg))
+		}
+		return spinStyle.Render(fmt.Sprintf("%s%s %s", prefix, spin, name))
+	default:
+		return ""
+	}
+}
+
+type item struct {
+	status test.Status
+	name   string
+	prefix string
+}
+
+func renderItems(items []item) string {
+	var rendered []string
+
+	for _, item := range items {
+		rendered = append(rendered, renderItem(item.status, item.name, item.prefix))
+	}
+
+	return strings.Join(rendered, "")
 }
